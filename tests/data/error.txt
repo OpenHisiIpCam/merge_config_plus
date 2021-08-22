@@ -1,0 +1,7 @@
+a1
+2a
+3aaa
+4aax
+VAR=VAR
+TEST=1
+TEST=2

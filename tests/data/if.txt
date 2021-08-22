@@ -1,0 +1,48 @@
+%(ifeq "left","right")
+%(include "vars.txt")
+%(else)
+%(endif)
+
+F1="1"
+%(include "vars.txt")
+F2="2"
+%(ifeq "left","right")
+%(endif)
+
+%(ifeq "left","right")
+	%(ifneq "left2","right2")
+	%(endif)
+%(endif)
+
+%(ifeq "left","right")
+TEST2=y
+%(shell "dfdfdf")
+%(else)
+TEST3="ddfdf"
+%(endif)
+
+%(ifeq %(STR1), %(STR2))
+TEST="TRUE"
+%(endif)
+
+V1="string1"
+V2="string2"
+
+%(ifeq %(V1),%(V2))
+        TEST="V1 == V2"
+%(else)
+        TEST="V1 != V2"
+%(endif)
+
+%(ifneq %(V1),"some")
+        TEST="V1 != some"
+%(endif)
+
+%(ifneq %(V1),"some ".%(V5))
+        TEST="V1 != some V5"
+        %(shell "some_script.sh")
+        %(ifeq %(V2),"".%(shell "echo -n '123'"))
+                TEST2=%(V2)
+        %(endif)
+%(endif)
+

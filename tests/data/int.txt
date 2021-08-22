@@ -1,0 +1,2 @@
+BR2_CCTV_TESTH=0xfff
+TEST=0x

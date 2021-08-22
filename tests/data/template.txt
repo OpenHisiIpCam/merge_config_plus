@@ -1,0 +1,7 @@
+TEST=1
+OUTPUT=%(format 
+"format1", 
+"var1=".%(TEST),
+"var2=  'test1'",
+'var3=   "test2"'
+)

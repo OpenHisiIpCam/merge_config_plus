@@ -1,0 +1,69 @@
+diff -uraN sly-a/lex.py sly-b/lex.py
+--- sly-a/lex.py	2021-08-21 14:10:09.543605186 +0300
++++ sly-b/lex.py	2021-08-21 13:13:46.723135543 +0300
+@@ -73,9 +73,9 @@
+     '''
+     Representation of a single token.
+     '''
+-    __slots__ = ('type', 'value', 'lineno', 'index')
++    __slots__ = ('type', 'value', 'lineno', 'index', 'file')
+     def __repr__(self):
+-        return f'Token(type={self.type!r}, value={self.value!r}, lineno={self.lineno}, index={self.index})'
++        return f'Token(type={self.type!r}, value={self.value!r}, lineno={self.lineno}, index={self.index}, file={self.file!r})'
+ 
+ class TokenStr(str):
+     @staticmethod
+@@ -357,7 +357,7 @@
+         '''
+         self.begin(self.__state_stack.pop())
+ 
+-    def tokenize(self, text, lineno=1, index=0):
++    def tokenize(self, text, lineno=1, index=0, file=""):
+         _ignored_tokens = _master_re = _ignore = _token_funcs = _literals = _remapping = None
+ 
+         # --- Support for state changes
+@@ -392,6 +392,7 @@
+ 
+         # --- Main tokenization function
+         self.text = text
++        self.file = file
+         try:
+             while True:
+                 try:
+@@ -404,6 +405,7 @@
+                 tok = Token()
+                 tok.lineno = lineno
+                 tok.index = index
++                tok.file = self.file
+                 m = _master_re.match(text, index)
+                 if m:
+                     index = m.end()
+diff -uraN sly-a/yacc.py sly-b/yacc.py
+--- sly-a/yacc.py	2021-08-21 14:10:09.543605186 +0300
++++ sly-b/yacc.py	2021-08-21 13:50:43.219599751 +0300
+@@ -143,6 +143,16 @@
+                 return index
+         raise AttributeError('No index attribute found')
+ 
++    @property
++    def file(self):
++        for tok in self._slice:
++            if isinstance(tok, YaccSymbol):
++                continue
++            file = getattr(tok, 'file', None)
++            if file is not None:
++                return file
++        raise AttributeError('No file attribute found')
++
+     def __getattr__(self, name):
+         if name in self._namemap:
+             return self._namemap[name](self._slice)
+@@ -2214,6 +2224,8 @@
+                         t.lineno = lookahead.lineno
+                     if hasattr(lookahead, 'index'):
+                         t.index = lookahead.index
++                    if hasattr(lookahead, 'file'):
++                        t.file = lookahead.file
+                     t.value = lookahead
+                     lookaheadstack.append(lookahead)
+                     lookahead = t

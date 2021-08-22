@@ -1,0 +1,7 @@
+%(none )
+
+%(shell "echo -n 123")
+%(shell "echo","-n 123")
+%(shell "echo","-n", "123")
+
+%(shell "false")

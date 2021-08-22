@@ -1,0 +1,24 @@
+TEST=""
+TEST="
+"
+TEST=""
+TEST=" "
+TEST="	"
+TESTME="abc". "abc".'333333'
+
+TEST="1
+2
+3
+4"
+TEST="1\
+2\
+3\
+4"
+###
+TEST=""
+TEST=" %(TEST2) "
+#%(shell "1"."2", '3'.'4')
+TEST='signle quote string'
+TEST='%(VVVV)'
+
+TEST="".%(VAR123).%(shell "")."=====t"
