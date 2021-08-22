@@ -1,0 +1,13 @@
+%(define "")
+%(define '')
+
+
+%(call)
+%(call "")
+%(call "idontknow")
+%(define "chunk1")
+	TEST1=1
+	TEST2=2
+%(endef)
+
+%(call "chunk1")

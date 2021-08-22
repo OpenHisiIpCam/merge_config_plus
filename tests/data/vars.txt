@@ -1,0 +1,27 @@
+# BR2_TE is not set
+RRRRRRRRRRRR = y
+RRRRRRRRRRRR += "dfdfdfdf"
+BR2=123
+#222
+YYY=m
+BR2_HEX=0xff
+BR2_DF=y
+BR2_DFDF    = 454
+   BR2_DFDF = 433
+#"REstffdf"
+#    "dfdfdf222"
+BR2_STR="fgfdgf" . %(VARSOME) . "test"
+#BR2_STR2222="fgfdgf %(VARSOME) test"
+#TEST  = "   \
+#dfdf df  \
+# dfdf \
+#"
+# BR2_TE is not set
+T1+="test"
+T2-="test"
+T3=+"dfdfdf" . "123"
+
+T10=%(VARRRR)
+
+#T111=%(shell "")
+T111?=0xfffff

@@ -1,0 +1,3 @@
+TEST="a"
+
+%(process "./subout", "", "./1.txt", "")

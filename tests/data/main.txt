@@ -1,0 +1,12 @@
+%(include "empty.txt")
+
+%(include "nested.txt")
+
+# Config variables
+%(include "vars.txt")
+# Functions
+%(include "funcs.txt")
+
+%(include "strings.txt")
+
+%(include "if.txt")
