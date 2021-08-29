@@ -223,6 +223,8 @@ ast = MCPAst()
 
 ast.configAdd("LOCAL_BASE", "string", base_dir, 0, "/")
 ast.configAdd("LOCAL_TMP", "string", tmp_dir, 0, "/")
+# Path for generated content (if anything), always setuped as first input file directory name
+ast.configAdd("LOCAL_GENERATED", "string", os.path.dirname(os.path.abspath(args.files[0].name)), 0, "/")
 
 ast.process(parser.parse(lexer.tokenize2(prepend=args.prepend, append=args.append)))
 

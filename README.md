@@ -385,8 +385,9 @@ If there were errors/warnings during processing output file will be not created.
 Such named vars can be used during processing for any purpose.
 
 There are several predefined vars:
-* `LOCAL_BASE` base dir
-* `LOCAL_TMP` temporary dir
+* `LOCAL_BASE` base dir (first file directory name or setuped via cmd line)
+* `LOCAL_TMP` temporary dir (base dir or setuped via cmd line)
+* `LOCAL_GENERATED` first input file directory name
 
 ## Usage
 

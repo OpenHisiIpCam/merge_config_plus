@@ -94,15 +94,30 @@ class MCPAst:
         self.logger.info("Process function starting sub processing...")
         ast.configAdd("LOCAL_BASE", "string", base_dir, 0, "/")
         ast.configAdd("LOCAL_TMP", "string", base_dir, 0, "/")
+        
+        local_generated, _, local_generated_exist = self.configValue("LOCAL_GENERATED")
+        if local_generated_exist == False:
+            local_generated = base_dir
+        ast.configAdd("LOCAL_GENERATED", "string", local_generated, 0, "/")
+
         ast.process(parser.parse(lexer.tokenize2()))
         self.logger.info("Process function finished")
 
-        fake_file = io.StringIO()
+        num_errors = 0
+        num_errors += lexer.num_errors
+        num_errors += parser.num_errors
+        num_errors += ast.num_errors
 
-        format = MCPFormat(fake_file, base_dir)
-        format.output(ast.configs)
+        if num_errors > 0:
+            self.logger.warning("Sub processing finished, but there were {num} errors/warnings!".format(num=num_errors))
+            self.num_errors += 1
+        else:
+            fake_file = io.StringIO()
 
-        return fake_file.getvalue().strip()
+            format = MCPFormat(fake_file, base_dir)
+            format.output(ast.configs)
+
+            return fake_file.getvalue().strip()
 
     def do_format(self, s, **kwargs):
         """Replaces missing keys with a pattern."""
@@ -319,7 +334,8 @@ class MCPAst:
             path = args[0]
         else:
             path = base_dir + "/" + args[0]
-
+    
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         try:
             f = open(path, "w")
         except Exception as e:
@@ -409,6 +425,12 @@ class MCPAst:
             self.logger.error("func_patch: can't parse version string!")
             self.num_errors += 1
         return ""
+
+    def func_relpath(self, args, line, file):
+        self.logger.debug("func_relpath:")
+        self.logger.debug(pprint.pformat(args))
+        # TODO params check
+        return os.path.relpath(args[0], start=args[1])
 
     # Ast processing
 
@@ -630,6 +652,8 @@ class MCPAst:
             r = self.func_minor(args, line, file)
         elif item[1] == "patch":
             r = self.func_patch(args, line, file)
+        elif item[1] == "relpath":
+            r = self.func_relpath(args, line, file)
         else:
             self.logger.error(
                 "Function '{name}' not found on {file}:{line}".format(
