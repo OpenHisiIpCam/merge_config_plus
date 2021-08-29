@@ -10,7 +10,11 @@ class MCPFormat:
     def output(self, configs):
         for item in configs:
             if item[0] == "comment":
-                if len(item[1]) == 0 or item[1][0] != "#":
+                # show empty comments
+                # and
+                # filter ##something
+                #TODO
+                if len(item[1]) > 0 and not (item[1][0] == "#"):
                     print("#{line}".format(line=item[1]), file=self.file)
                 continue
 
