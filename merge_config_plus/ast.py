@@ -6,6 +6,7 @@ import os
 import io
 import subprocess
 from subprocess import PIPE
+from packaging.version import Version
 import difflib
 import logging
 import pprint
@@ -200,10 +201,12 @@ class MCPAst:
             self.logger.critical("func_shell: internal error!")
             self.num_errors += 1
             print(e)
+            exit(1)
         except Exception as e:
             self.logger.critical("func_shell: internal error!")
             self.num_errors += 1
             print(e)
+            exit(1)
 
         return ""
 
@@ -239,7 +242,8 @@ class MCPAst:
         self.logger.debug(pprint.pformat(args))
 
         for arg in args:
-            if arg.strip() == "":
+            name = arg.strip()
+            if name == "":
                 self.logger.error(
                     "Call to unnamed define is ambiguous on {file}:{line}".format(
                         line=line, file=file
@@ -248,21 +252,12 @@ class MCPAst:
                 self.num_errors += 1
                 continue
 
-            if arg.strip() == "":
-                self.logger.error(
-                    "Call to unnamed define is ambiguous on {file}:{line}".format(
-                        line=line, file=file
-                    )
-                )
-                self.num_errors += 1
-                continue
-
-            if arg in self.defines:
-                self.ast_root(self.defines[arg])
+            if name in self.defines:
+                self.ast_root(self.defines[name])
             else:
                 self.logger.error(
-                    "Call to unknown define on {file}:{line}".format(
-                        line=line, file=file
+                    "Call to unknown define '{define}' on {file}:{line}".format(
+                        line=line, file=file, define=name
                     )
                 )
                 self.num_errors += 1
@@ -340,6 +335,81 @@ class MCPAst:
 
         return os.path.abspath(path)
 
+    def func_fail(self, args, line, file):
+        self.logger.debug("func_fail:")
+        self.logger.debug(pprint.pformat(args))
+        msg=""
+        for arg in args:
+            msg += msg + arg
+        self.logger.critical("{msg} on {file}:{line}".format(msg=msg.strip(), line=line, file=file))
+        return ""
+
+    def func_comment(self, args, line, file):
+        self.logger.debug("func_comment:")
+        self.logger.debug(pprint.pformat(args))
+        msg=""
+        for arg in args:
+            msg += msg + arg
+        self.configAddComment(msg)
+        return msg
+
+    def func_major(self, args, line, file):
+        self.logger.debug("func_major:")
+        self.logger.debug(pprint.pformat(args))
+        if len(args) < 1:
+            self.logger.error(
+                "Major function expect one arg {file}:{line}".format(
+                    msg=e, line=line, file=file
+                )
+            )
+            self.num_errors += 1
+            return ""
+        try:
+            ver = Version(args[0])
+            return str(ver.major)
+        except Exception as e:
+            self.logger.error("func_major: can't parse version string!")
+            self.num_errors += 1
+        return ""
+
+    def func_minor(self, args, line, file):
+        self.logger.debug("func_minor:")
+        self.logger.debug(pprint.pformat(args))
+        if len(args) < 1:
+            self.logger.error(
+                "Minor function expect one arg {file}:{line}".format(
+                    msg=e, line=line, file=file
+                )
+            )
+            self.num_errors += 1
+            return ""
+        try:
+            ver = Version(args[0])
+            return str(ver.minor)
+        except Exception as e:
+            self.logger.error("func_minor: can't parse version string!")
+            self.num_errors += 1
+        return ""
+
+    def func_patch(self, args, line, file):
+        self.logger.debug("func_patch:")
+        self.logger.debug(pprint.pformat(args))
+        if len(args) < 1:
+            self.logger.error(
+                "Patch function expect one arg {file}:{line}".format(
+                    msg=e, line=line, file=file
+                )
+            )
+            self.num_errors += 1
+            return ""
+        try:
+            ver = Version(args[0])
+            return str(ver.patch)
+        except Exception as e:
+            self.logger.error("func_patch: can't parse version string!")
+            self.num_errors += 1
+        return ""
+
     # Ast processing
 
     def ast_root(self, items):
@@ -364,6 +434,7 @@ class MCPAst:
                 self.ast_if(item)
             else:
                 self.logger.critical("ast_root: unknown item!")
+                exit(1)
 
     def ast_define(self, item):
         self.logger.debug("ast_define:")
@@ -403,7 +474,7 @@ class MCPAst:
             typ = "string"
         else:
             self.logger.critical("ast_config: uknown item!")
-            pass
+            exit(1)
 
         if item[2] == "=":
             val
@@ -436,7 +507,7 @@ class MCPAst:
             self.logger.critical(
                 "ast_config: uknown operation '{op}'!".format(op=item[2])
             )
-            pass
+            exit(1)
 
         self.configAdd(item[1], typ, val, item[4][0], item[4][1])
 
@@ -461,6 +532,7 @@ class MCPAst:
                 str0 += self.ast_func(part)
             else:
                 self.logger.critical("ast_string: unknown item!")
+                exit(1)
 
         self.logger.debug("ast_string final:")
         self.logger.debug(pprint.pformat(str0))
@@ -487,6 +559,7 @@ class MCPAst:
                 branch = 4
         else:
             self.logger.critical("ast_if: internal error!")
+            exit(1)
 
         self.ast_root(item[branch])
 
@@ -503,6 +576,7 @@ class MCPAst:
             return self.ast_func(item)
         else:
             self.logger.critical("ast_if_cond: internal error!")
+            exit(1)
 
         return ""
 
@@ -521,6 +595,7 @@ class MCPAst:
                 r = self.ast_func(arg)
             else:
                 self.logger.critical("ast_func: internal error!")
+                exit(1)
 
             args.append(str(r))
 
@@ -545,6 +620,16 @@ class MCPAst:
             r = self.func_file(args, line, file)
         elif item[1] == "save":
             r = self.func_save(args, line, file)
+        elif item[1] == "fail":
+            r = self.func_fail(args, line, file)
+        elif item[1] == "comment":
+            r = self.func_comment(args, line, file)
+        elif item[1] == "major":
+            r = self.func_major(args, line, file)
+        elif item[1] == "minor":
+            r = self.func_minor(args, line, file)
+        elif item[1] == "patch":
+            r = self.func_patch(args, line, file)
         else:
             self.logger.error(
                 "Function '{name}' not found on {file}:{line}".format(

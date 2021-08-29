@@ -300,6 +300,25 @@ Other arguments treated as data that will be concatenated and saved.
 %(save "path/to/file", "data")
 ```
 
+#### fail
+Raise critical fail (processing will be continued to possible see all errors, 
+but output file will not be created).
+```
+%(fail "some message")
+```
+
+#### comment
+```
+%(comment "This will be added".%(VAR)." to output comments")
+```
+
+#### Symver tools
+```
+%(major "a.b.c") # -> "a"
+%(minor "a.b.c") # -> "b"
+%(patch "a.b.c") # -> "c"
+```
+
 ### Conditional processing
 
 Process flow control is presented with `ifeq` and `ifneq`.
@@ -340,6 +359,7 @@ Comments that started with `##` are exluded from output.
 # comment
 VAR=y # comment
 %(shell "arg") # comment
+## This will not go to output file
 ```
 
 Spaces and tabs are skipped everywhere except strings. 
@@ -356,6 +376,8 @@ TEST	=	y
 Overall tool strategy is to provide output despite error and warnings.
 Practically this means that unknown vars and failed functions will be 
 expanded as empty strings.
+
+If there were errors/warnings during processing output file will be not created.
 
 ### Local vars
 
@@ -378,7 +400,7 @@ usage: merge_config_plus.py [-h] [-v] [-d]
                             [-f F [F ...]] [-a APPEND] [-p PREPEND]
                             [--strip-history]
 
-Kconfig preprocessor 2.0.1 license MIT
+Kconfig preprocessor 2.1.0 license MIT
 (https://github.com/OpenHisiIpCam/merge_config_plus).
 
 optional arguments:
