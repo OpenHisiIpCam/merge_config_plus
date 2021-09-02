@@ -23,6 +23,7 @@ class MCPAst:
         self.num_errors = 0
 
     def configAdd(self, name, typ, value, lineno, file):
+        number = 0
         for item in self.configs:
             if item[0] == "config" and item[1] == name:
                 if item[2][-1][0] != typ:
@@ -35,10 +36,20 @@ class MCPAst:
                 else:
                     self.logger.debug("Rewrited in configs:")
 
+                newitem = item
                 new = tuple((str(typ), value, lineno, file))
-                item[2].append(new)
+                newitem[2].append(new)
+                self.configs.append(newitem)
+
+                if name.find("LOCAL_") != 0:
+                    newolditem = tuple(("comment", " "+item[1]+" was '"+str(item[2][-1][1])+"'")) #, [tuple((str(typ), value, lineno, file))]))
+                    self.configs[number] = newolditem
+                else:
+                    self.configs.remove(item)
+
                 self.logger.debug(pprint.pformat(new))
                 return
+            number += 1
 
         append = tuple(("config", str(name), [tuple((str(typ), value, lineno, file))]))
         self.configs.append(append)
@@ -72,6 +83,14 @@ class MCPAst:
 
         return r
 
+    def realOutput(self):
+        name, _, exist = self.configValue("LOCAL_OUTPUT_REAL_NAME", strict=False)
+        
+        if not exit:
+            return ""
+
+        return name
+
     # Functions
 
     # input text...
@@ -94,11 +113,12 @@ class MCPAst:
         self.logger.info("Process function starting sub processing...")
         ast.configAdd("LOCAL_BASE", "string", base_dir, 0, "/")
         ast.configAdd("LOCAL_TMP", "string", base_dir, 0, "/")
-        
-        local_generated, _, local_generated_exist = self.configValue("LOCAL_GENERATED")
-        if local_generated_exist == False:
-            local_generated = base_dir
-        ast.configAdd("LOCAL_GENERATED", "string", local_generated, 0, "/")
+       
+        # TODO put here output locals
+        #local_generated, _, local_generated_exist = self.configValue("LOCAL_GENERATED")
+        #if local_generated_exist == False:
+        #    local_generated = base_dir
+        #ast.configAdd("LOCAL_GENERATED", "string", local_generated, 0, "/")
 
         ast.process(parser.parse(lexer.tokenize2()))
         self.logger.info("Process function finished")
@@ -502,6 +522,7 @@ class MCPAst:
             val
             typ
         elif item[2] == "?=":
+            # strict false -> don`t warn if var is not exist
             _, _, exist = self.configValue(item[1], strict=False)
             if exist == True:
                 # dont save var if already exist

@@ -23,6 +23,7 @@ class MCPFormat:
                 continue
 
             if not self.strip_prev:
+                # TODO suppress same values in history
                 # print previous values
                 if len(item[2][0:-1]) > 0:
                     print("", file=self.file)

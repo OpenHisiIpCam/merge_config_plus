@@ -158,7 +158,7 @@ class MCPLexer(Lexer):
 
     @_(r"(\"[^\"]*\"|\'[^\']*\')")
     def STRING(self, t):
-        t.value = self.remove_quotes(t.value).replace("\\\n", "").replace("\\n", "\n")
+        t.value = self.remove_quotes(t.value).replace("\\\n", "").replace("\\n", "\n").replace("\\t", "\t")
         self.logger.debug(pprint.pformat(t))
         return t
 
@@ -184,7 +184,7 @@ class MCPLexer(Lexer):
         return t
 
     ## Define
-    _re_define = r"%\(\s*define\s*(\"([a-zA-Z0-9_]*)\"|\'([a-zA-Z0-9_]*)\')\s*\)"
+    _re_define = r"%\(\s*define\s*(\"([a-zA-Z0-9_-]*)\"|\'([a-zA-Z0-9_-]*)\')\s*\)"
 
     @_(_re_define)
     def DEFINE(self, t):
