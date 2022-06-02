@@ -21,7 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 __license__ = "MIT"
-__version__ = "2.1.0"
+__version__ = "2.1.1"
 __url__ = "https://github.com/OpenHisiIpCam/merge_config_plus"
 
 from .lexer import MCPLexer

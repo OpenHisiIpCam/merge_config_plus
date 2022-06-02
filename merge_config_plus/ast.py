@@ -23,6 +23,7 @@ class MCPAst:
         self.num_errors = 0
 
     def configAdd(self, name, typ, value, lineno, file):
+        number = 0
         for item in self.configs:
             if item[0] == "config" and item[1] == name:
                 if item[2][-1][0] != typ:
@@ -35,10 +36,20 @@ class MCPAst:
                 else:
                     self.logger.debug("Rewrited in configs:")
 
+                newitem = item
                 new = tuple((str(typ), value, lineno, file))
-                item[2].append(new)
+                newitem[2].append(new)
+                self.configs.append(newitem)
+
+                if name.find("LOCAL_") != 0:
+                    newolditem = tuple(("comment", " "+item[1]+" was '"+str(item[2][-1][1])+"'")) #, [tuple((str(typ), value, lineno, file))]))
+                    self.configs[number] = newolditem
+                else:
+                    self.configs.remove(item)
+
                 self.logger.debug(pprint.pformat(new))
                 return
+            number += 1
 
         append = tuple(("config", str(name), [tuple((str(typ), value, lineno, file))]))
         self.configs.append(append)
@@ -72,6 +83,14 @@ class MCPAst:
 
         return r
 
+    def realOutput(self):
+        name, _, exist = self.configValue("LOCAL_OUTPUT_REAL_NAME", strict=False)
+        
+        if not exit:
+            return ""
+
+        return name
+
     # Functions
 
     # input text...
@@ -94,15 +113,31 @@ class MCPAst:
         self.logger.info("Process function starting sub processing...")
         ast.configAdd("LOCAL_BASE", "string", base_dir, 0, "/")
         ast.configAdd("LOCAL_TMP", "string", base_dir, 0, "/")
+       
+        # TODO put here output locals
+        #local_generated, _, local_generated_exist = self.configValue("LOCAL_GENERATED")
+        #if local_generated_exist == False:
+        #    local_generated = base_dir
+        #ast.configAdd("LOCAL_GENERATED", "string", local_generated, 0, "/")
+
         ast.process(parser.parse(lexer.tokenize2()))
         self.logger.info("Process function finished")
 
-        fake_file = io.StringIO()
+        num_errors = 0
+        num_errors += lexer.num_errors
+        num_errors += parser.num_errors
+        num_errors += ast.num_errors
 
-        format = MCPFormat(fake_file, base_dir)
-        format.output(ast.configs)
+        if num_errors > 0:
+            self.logger.warning("Sub processing finished, but there were {num} errors/warnings!".format(num=num_errors))
+            self.num_errors += 1
+        else:
+            fake_file = io.StringIO()
 
-        return fake_file.getvalue().strip()
+            format = MCPFormat(fake_file, base_dir)
+            format.output(ast.configs)
+
+            return fake_file.getvalue().strip()
 
     def do_format(self, s, **kwargs):
         """Replaces missing keys with a pattern."""
@@ -319,7 +354,8 @@ class MCPAst:
             path = args[0]
         else:
             path = base_dir + "/" + args[0]
-
+    
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         try:
             f = open(path, "w")
         except Exception as e:
@@ -410,6 +446,12 @@ class MCPAst:
             self.num_errors += 1
         return ""
 
+    def func_relpath(self, args, line, file):
+        self.logger.debug("func_relpath:")
+        self.logger.debug(pprint.pformat(args))
+        # TODO params check
+        return os.path.relpath(args[0], start=args[1])
+
     # Ast processing
 
     def ast_root(self, items):
@@ -480,6 +522,7 @@ class MCPAst:
             val
             typ
         elif item[2] == "?=":
+            # strict false -> don`t warn if var is not exist
             _, _, exist = self.configValue(item[1], strict=False)
             if exist == True:
                 # dont save var if already exist
@@ -630,6 +673,8 @@ class MCPAst:
             r = self.func_minor(args, line, file)
         elif item[1] == "patch":
             r = self.func_patch(args, line, file)
+        elif item[1] == "relpath":
+            r = self.func_relpath(args, line, file)
         else:
             self.logger.error(
                 "Function '{name}' not found on {file}:{line}".format(
